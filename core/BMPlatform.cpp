@@ -2,11 +2,9 @@
 #include "common.h"
 #include <iostream>
 
-// Определение m_bOpened
 int m_bOpened = 0;
 
 CBMPlatformApp::CBMPlatformApp() {
-    // Разместите всю важную инициализацию в InitInstance
     m_pfCreateChannel = NULL;
     m_pfReleaseChannel = NULL;
     m_hChannelLib = NULL;
