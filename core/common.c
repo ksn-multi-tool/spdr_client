@@ -141,13 +141,10 @@ void print_string(FILE *f, const void *src, size_t n) {
 void find_endpoints(libusb_device_handle *dev_handle, int result[2]) {
 	int endp_in = -1, endp_out = -1;
 	int i, k, err;
-	//struct libusb_device_descriptor desc;
 	struct libusb_config_descriptor *config;
 	libusb_device *device = libusb_get_device(dev_handle);
 	if (!device)
 		ERR_EXIT("libusb_get_device failed\n");
-	//if (libusb_get_device_descriptor(device, &desc) < 0)
-	// ERR_EXIT("libusb_get_device_descriptor failed");
 	err = libusb_get_config_descriptor(device, 0, &config);
 	if (err < 0)
 		ERR_EXIT("libusb_get_config_descriptor failed : %s\n", libusb_error_name(err));
@@ -198,7 +195,6 @@ void find_endpoints(libusb_device_handle *dev_handle, int result[2]) {
 	if (endp_out < 0) ERR_EXIT("endp_out not found\n");
 	libusb_free_config_descriptor(config);
 
-	//DBG_LOG("USB endp_in=%02x, endp_out=%02x\n", endp_in, endp_out);
 
 	result[0] = endp_in;
 	result[1] = endp_out;
@@ -379,7 +375,6 @@ void encode_msg_nocpy(spdio_t *io, int type, size_t len) {
 	if (io->flags & FLAGS_CRC16)
 		chk = spd_crc16(0, p0, len);
 	else {
-		// if (len & 1) *p++ = 0;
 		chk = spd_checksum(0, p0, len, CHK_FIXZERO);
 	}
 	WRITE16_BE(p, chk); p += 2;
@@ -597,7 +592,6 @@ int recv_msg(spdio_t *io) {
 	for (;;) {
 		if (io->m_dwRecvThreadID) ret = recv_msg_async(io);
 		else ret = recv_msg_orig(io);
-		// only retry in fdl2 stage
 		if (!ret) {
 			if (fdl2_executed) {
 #if !USE_LIBUSB
@@ -626,7 +620,6 @@ int recv_msg_timeout(spdio_t *io, int timeout) {
 }
 
 unsigned recv_type(spdio_t *io) {
-	//if (io->raw_len < 6) return -1;
 	return READ16_BE(io->raw_buf);
 }
 
@@ -682,7 +675,6 @@ void send_buf(spdio_t *io,
 	if (send_and_check(io)) return;
 	for (i = 0; i < size; i += n) {
 		n = size - i;
-		// n = spd_transcode_max(mem + i, size - i, 2048 - 2 - 6);
 		if (n > step) n = step;
 		encode_msg(io, BSL_CMD_MIDST_DATA, mem + i, n);
 		if (send_and_check(io)) return;
@@ -966,7 +958,6 @@ uint64_t read_pactime(spdio_t *io) {
 	time |= (uint64_t)READ32_LE(io->raw_buf + 8) << 32;
 
 	unix = time ? time / 10000000 - 11644473600 : 0;
-	// $ date -d @unixtime
 	DBG_LOG("pactime = 0x%llx (unix = %llu)\n", time, unix);
 
 	encode_msg_nocpy(io, BSL_CMD_READ_END, 0);
@@ -1224,7 +1215,6 @@ partition_t *partition_list(spdio_t *io, const char *fn, int *part_count_ptr) {
 void repartition(spdio_t *io, const char *fn) {
 	uint8_t *buf = io->temp_buf;
 	int n = scan_xml_partitions(io, fn, buf, 0xffff);
-	// print_mem(stderr, io->temp_buf, n * 0x4c);
 	encode_msg_nocpy(io, BSL_CMD_REPARTITION, n * 0x4c);
 	if (!send_and_check(io)) gpt_failed = 0;
 }
@@ -1517,7 +1507,6 @@ void find_partition_size_new(spdio_t *io, const char *name, unsigned long long *
 		return;
 	}
 
-	//uint32_t data[2] = { 0x80,0 };
 	uint32_t *data = (uint32_t *)io->temp_buf;
 	WRITE32_LE(data, 0x80);
 	WRITE32_LE(data + 1, 0);
@@ -1575,7 +1564,6 @@ uint64_t check_partition(spdio_t *io, const char *name, int need_size) {
 		return 0;
 	}
 
-	//uint32_t data[2] = { 0x8, 0 };
 	uint32_t *data = (uint32_t *)io->temp_buf;
 	WRITE32_LE(data, 8);
 	WRITE32_LE(data + 1, 0);
@@ -1593,7 +1581,6 @@ uint64_t check_partition(spdio_t *io, const char *name, int need_size) {
 	int incrementing = 1;
 	select_partition(io, name, 0xffffffff, 0, BSL_CMD_READ_START);
 	if (send_and_check(io)) {
-		//NAND flash !!!
 		end = 10;
 		encode_msg_nocpy(io, BSL_CMD_READ_END, 0);
 		send_and_check(io);
@@ -2070,7 +2057,6 @@ void select_ab(spdio_t *io) {
 		return;
 	}
 
-	//uint32_t data[2] = { 0x20,0x800 };
 	uint32_t *data = (uint32_t *)io->temp_buf;
 	WRITE32_LE(data, 0x20);
 	WRITE32_LE(data + 1, 0x800);
@@ -2174,7 +2160,6 @@ void w_mem_to_part_offset(spdio_t *io, const char *name, size_t offset, uint8_t 
 	load_partition_unify(io, gPartInfo.name, fix_fn, step);
 }
 
-// 1 main written and _bak not written, 2 both written
 int load_partition_unify(spdio_t *io, const char *name, const char *fn, unsigned step) {
 	char name0[36], name1[40];
 	unsigned size0, size1;
@@ -2298,7 +2283,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 						}
 					}
 					else {
-						if (curPort == changedPort) m_bOpened = -1; // no need to judge changedPort for DBT_DEVICEREMOVECOMPLETE
+						if (curPort == changedPort) m_bOpened = -1;
 					}
 					interface_checked = FALSE;
 					is_diag = FALSE;
@@ -2545,10 +2530,6 @@ void DestroyRecvThread(spdio_t *io) {
 #ifndef _MSC_VER
 pthread_t gUsbEventThrd;
 libusb_hotplug_callback_handle gHotplugCbHandle = 0;
-
-// SPRD DIAG, bInterfaceNumber 0
-// SPRD LOG, bInterfaceNumber 1
-// Since find_endpoints() ignored bInterfaceNumber 1, 0x4d03 works in HotplugCbFunc()
 int HotplugCbFunc(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
 	if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) { if (!curPort) curPort = device; }
 	else { if (curPort == device) m_bOpened = -1; }
