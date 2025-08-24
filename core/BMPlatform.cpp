@@ -100,7 +100,6 @@ BOOL CBootModeOpr::ConnectChannel(DWORD dwPort, ULONG ulMsgId, DWORD Receiver) {
     m_bOpened = m_pChannel->Open(&ca);
     if (m_bOpened) {
         std::cout << "Successfully connected to port: " << dwPort << std::endl;
-        // Инициализация spdio_t и запуск потока приёма
         spdio_t *io = spdio_init(0);
         if (io) {
             io->handle = m_pChannel;
