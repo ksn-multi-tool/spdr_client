@@ -1,3 +1,5 @@
+#define CORE_EXPORT
+
 #include "Wrapper.h"
 #include "BMPlatform.h"
 #include "common.h"

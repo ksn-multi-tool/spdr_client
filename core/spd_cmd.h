@@ -1,4 +1,3 @@
-
 #define HDLC_HEADER 0x7e
 #define HDLC_ESCAPE 0x7d
 #define FDL1_DUMP_MEM 0
@@ -96,29 +95,8 @@ enum {
 	BSL_CMD_READ_NAND_BLOCK_INFO = 0x29, /* ReadNandBlockInfo */
 
 	BSL_CMD_SET_FIRST_MODE = 0x2A, /* Set First Mode */ // miscdata related
-	BSL_CMD_SET_RANDOM_DATA = 0x2B, /* Set Random Data */ // handshake related, device send encrypted data in 0x96 packet to PC, PC send 0x2B decrypted data, device return 0x80 or 0xB9
+	BSL_CMD_SET_RANDOM_DATA = 0x2B, /* Set Random Data */ // handshake related, device send encrypted data in 0x96 packet to PC, PC send 0x2B decrypted data, device return 0x80
 
-	BSL_CMD_SET_TIME_STAMP = 0x2C, /* Set Time Stamp used for second hand memory check */ // miscdata related
-	BSL_CMD_READ_PARTITION = 0x2D, /* Read partition information from phone */
-	BSL_CMD_READ_VCUR_DATA = 0x2E, /* Read Vpac */ // miscdata related
-	BSL_CMD_WRITE_VPAC_DATA = 0x2F, /* Write Vpac */ // miscdata related
-
-	BSL_CMD_MIDST_RAW_START = 0x31, /* Midst Raw Start */
-	BSL_CMD_FLUSH_DATA = 0x32, /* Flush Data */ // sha256 a small packet before download raw data (unused currently)
-	BSL_CMD_MIDST_RAW_START2 = 0x33, /* Midst Raw Start for V2, only send once */
-	BSL_CMD_ENABLE_UBOOT_LOG = 0x34, /* Enable 0xFF type uboot log */ // return 0x80
-	BSL_CMD_DUMP_UBOOT_LOG = 0x35, /* request dump uboot log */
-
-	BSL_CMD_DISABLE_SELINUX = 0x40, /* Disable Selinux */ // miscdata related
-
-	BSL_CMD_AUTH_BEGIN = 0x41, /* Begin Auth - Ack M1 */ // handshake related
-	BSL_CMD_AUTH_END = 0x42, /* End Auth - Send Secure */ // handshake related
-
-	BSL_CMD_EMMC_CID = 0x43, /* Read EMMC_CID */
-
-	BSL_CMD_OPEN_WATCH_DOG = 0x44, /* Open WatchDog */ // miscdata related
-	BSL_CMD_CLOSE_WATCH_DOG = 0x45, /* Close WatchDog */ // miscdata related
-	BSL_CMD_POWEROFF_NOKEY = 0x46, /* no key to dl */
 	BSL_CMD_WRITE_EFUSE = 0x47, /* Write efuse */
 	BSL_CMD_READ_PARTITION_VALUE = 0x48, /* Read Partition Value */
 	BSL_CMD_WRITE_PARTITION_VALUE = 0x49, /* Write Partition Value */

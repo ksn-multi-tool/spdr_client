@@ -10,12 +10,11 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <ctype.h> // tolower
+#include <ctype.h>
 #include <math.h>
 #include <time.h>
 
 #ifndef LIBUSB_DETACH
-/* detach the device from crappy kernel drivers */
 #define LIBUSB_DETACH 1
 #endif
 
@@ -24,15 +23,6 @@
 #include <Dbt.h>
 #include <tchar.h>
 #define WM_RCV_CHANNEL_DATA WM_USER + 1
-
-DWORD WINAPI ThrdFunc(LPVOID lpParam);
-#if UNICODE
-#define my_strstr wcsstr
-#define my_strtoul wcstoul
-#else
-#define my_strstr strstr
-#define my_strtoul strtoul
-#endif
 #else
 #include <dirent.h>
 #endif
@@ -46,6 +36,7 @@ DWORD WINAPI ThrdFunc(LPVOID lpParam);
 #else
 #include <setupapi.h>
 #include "Wrapper.h"
+#include "BMPlatform.h"
 #endif
 
 #ifdef _MSC_VER
@@ -61,140 +52,140 @@ void usleep(unsigned int us);
 
 #if _WIN32
 #define ERR_EXIT(...) \
-	do { fprintf(stderr, __VA_ARGS__); if (m_bOpened == 1) system("pause"); exit(1); } while (0)
+    do { fprintf(stderr, __VA_ARGS__); if (m_bOpened == 1) system("pause"); exit(1); } while (0)
 #else
 #define ERR_EXIT(...) \
-	do { fprintf(stderr, __VA_ARGS__); exit(1); } while (0)
+    do { fprintf(stderr, __VA_ARGS__); exit(1); } while (0)
 #endif
 
 #define DBG_LOG(...) fprintf(stderr, __VA_ARGS__)
 
 #define WRITE16_LE(p, a) do { \
-	((uint8_t*)(p))[0] = (uint8_t)(a); \
-	((uint8_t*)(p))[1] = (a) >> 8; \
+    ((uint8_t*)(p))[0] = (uint8_t)(a); \
+    ((uint8_t*)(p))[1] = (a) >> 8; \
 } while (0)
 
 #define WRITE32_LE(p, a) do { \
-	((uint8_t*)(p))[0] = (uint8_t)(a); \
-	((uint8_t*)(p))[1] = (a) >> 8; \
-	((uint8_t*)(p))[2] = (a) >> 16; \
-	((uint8_t*)(p))[3] = (a) >> 24; \
+    ((uint8_t*)(p))[0] = (uint8_t)(a); \
+    ((uint8_t*)(p))[1] = (a) >> 8; \
+    ((uint8_t*)(p))[2] = (a) >> 16; \
+    ((uint8_t*)(p))[3] = (a) >> 24; \
 } while (0)
 
 #define READ32_LE(p) ( \
-	((uint8_t*)(p))[0] | \
-	((uint8_t*)(p))[1] << 8 | \
-	((uint8_t*)(p))[2] << 16 | \
-	((uint8_t*)(p))[3] << 24)
+    ((uint8_t*)(p))[0] | \
+    ((uint8_t*)(p))[1] << 8 | \
+    ((uint8_t*)(p))[2] << 16 | \
+    ((uint8_t*)(p))[3] << 24)
 
 #define WRITE16_BE(p, a) do { \
-	((uint8_t*)(p))[0] = (a) >> 8; \
-	((uint8_t*)(p))[1] = (uint8_t)(a); \
+    ((uint8_t*)(p))[0] = (a) >> 8; \
+    ((uint8_t*)(p))[1] = (uint8_t)(a); \
 } while (0)
 
 #define WRITE32_BE(p, a) do { \
-	((uint8_t*)(p))[0] = (a) >> 24; \
-	((uint8_t*)(p))[1] = (a) >> 16; \
-	((uint8_t*)(p))[2] = (a) >> 8; \
-	((uint8_t*)(p))[3] = (uint8_t)(a); \
+    ((uint8_t*)(p))[0] = (a) >> 24; \
+    ((uint8_t*)(p))[1] = (a) >> 16; \
+    ((uint8_t*)(p))[2] = (a) >> 8; \
+    ((uint8_t*)(p))[3] = (uint8_t)(a); \
 } while (0)
 
 #define READ16_BE(p) ( \
-	((uint8_t*)(p))[0] << 8 | \
-	((uint8_t*)(p))[1])
+    ((uint8_t*)(p))[0] << 8 | \
+    ((uint8_t*)(p))[1])
 
 #define READ32_BE(p) ( \
-	((uint8_t*)(p))[0] << 24 | \
-	((uint8_t*)(p))[1] << 16 | \
-	((uint8_t*)(p))[2] << 8 | \
-	((uint8_t*)(p))[3])
-
+    ((uint8_t*)(p))[0] << 24 | \
+    ((uint8_t*)(p))[1] << 16 | \
+    ((uint8_t*)(p))[2] << 8 | \
+    ((uint8_t*)(p))[3])
 
 typedef struct {
-	char name[36];
-	long long size;
+    char name[36];
+    long long size;
 } partition_t;
 
 typedef struct {
-	uint8_t *raw_buf, *enc_buf, *recv_buf, *temp_buf, *untranscode_buf, *send_buf;
+    uint8_t *raw_buf, *enc_buf, *recv_buf, *temp_buf, *untranscode_buf, *send_buf;
 #if USE_LIBUSB
-	libusb_device_handle *dev_handle;
-	int endp_in, endp_out;
-	int m_dwRecvThreadID;
+    libusb_device_handle *dev_handle;
+    int endp_in, endp_out;
+    int m_dwRecvThreadID;
 #else
-	ClassHandle *handle;
-	HANDLE m_hOprEvent;
-	DWORD m_dwRecvThreadID;
-	HANDLE m_hRecvThreadState;
-	HANDLE m_hRecvThread;
+    ICommChannel *handle;
+    HANDLE m_hOprEvent;
+    DWORD m_dwRecvThreadID;
+    HANDLE m_hRecvThreadState;
+    HANDLE m_hRecvThread;
 #endif
 #if _WIN32
-	DWORD iThread;
-	HANDLE hThread;
+    DWORD iThread;
+    HANDLE hThread;
 #endif
-	int flags, recv_len, recv_pos;
-	int raw_len, enc_len, verbose, timeout;
-	partition_t *ptable;
-	int part_count;
+    int flags, recv_len, recv_pos;
+    int raw_len, enc_len, verbose, timeout;
+    partition_t *ptable;
+    int part_count;
+    int is_open;
 } spdio_t;
 
 #pragma pack(1)
 typedef struct {
-	uint8_t signature[8];
-	uint32_t revision;
-	uint32_t header_size;
-	uint32_t header_crc32;
-	int32_t reserved;
-	uint64_t current_lba;
-	uint64_t backup_lba;
-	uint64_t first_usable_lba;
-	uint64_t last_usable_lba;
-	uint8_t disk_guid[16];
-	uint64_t partition_entry_lba;
-	int32_t number_of_partition_entries;
-	uint32_t size_of_partition_entry;
-	uint32_t partition_entry_array_crc32;
+    uint8_t signature[8];
+    uint32_t revision;
+    uint32_t header_size;
+    uint32_t header_crc32;
+    int32_t reserved;
+    uint64_t current_lba;
+    uint64_t backup_lba;
+    uint64_t first_usable_lba;
+    uint64_t last_usable_lba;
+    uint8_t disk_guid[16];
+    uint64_t partition_entry_lba;
+    int32_t number_of_partition_entries;
+    uint32_t size_of_partition_entry;
+    uint32_t partition_entry_array_crc32;
 } efi_header;
 
 typedef struct {
-	uint8_t partition_type_guid[16];
-	uint8_t unique_partition_guid[16];
-	uint64_t starting_lba;
-	uint64_t ending_lba;
-	int64_t attributes;
-	uint8_t partition_name[72];
+    uint8_t partition_type_guid[16];
+    uint8_t unique_partition_guid[16];
+    uint64_t starting_lba;
+    uint64_t ending_lba;
+    int64_t attributes;
+    uint8_t partition_name[72];
 } efi_entry;
 
 typedef struct {
-	uint32_t dwVersion;
-	uint32_t bDisableHDLC; //0: Enable hdl; 1:Disable hdl
-	uint8_t bIsOldMemory;
-	uint8_t bSupportRawData;
-	uint8_t bReserve[2];
-	uint32_t dwFlushSize; //unit KB
-	uint32_t dwStorageType;
-	uint32_t dwReserve[59]; //Reserve
+    uint32_t dwVersion;
+    uint32_t bDisableHDLC;
+    uint8_t bIsOldMemory;
+    uint8_t bSupportRawData;
+    uint8_t bReserve[2];
+    uint32_t dwFlushSize;
+    uint32_t dwStorageType;
+    uint32_t dwReserve[59];
 } DA_INFO_T;
 
 typedef struct {
-	uint8_t priority : 4;
-	uint8_t tries_remaining : 3;
-	uint8_t successful_boot : 1;
-	uint8_t verity_corrupted : 1;
-	uint8_t reserved : 7;
+    uint8_t priority : 4;
+    uint8_t tries_remaining : 3;
+    uint8_t successful_boot : 1;
+    uint8_t verity_corrupted : 1;
+    uint8_t reserved : 7;
 } slot_metadata;
 
 typedef struct {
-	char slot_suffix[4];
-	uint32_t magic;
-	uint8_t version;
-	uint8_t nb_slot : 3;
-	uint8_t recovery_tries_remaining : 3;
-	uint8_t merge_status : 3;
-	uint8_t reserved0[1];
-	slot_metadata slot_info[4];
-	uint8_t reserved1[8];
-	uint32_t crc32_le;
+    char slot_suffix[4];
+    uint32_t magic;
+    uint8_t version;
+    uint8_t nb_slot : 3;
+    uint8_t recovery_tries_remaining : 3;
+    uint8_t merge_status : 3;
+    uint8_t reserved0[1];
+    slot_metadata slot_info[4];
+    uint8_t reserved1[8];
+    uint32_t crc32_le;
 } bootloader_control;
 #pragma pack()
 
@@ -212,10 +203,8 @@ void DestroyRecvThread(spdio_t *io);
 
 void print_string(FILE *f, const void *src, size_t n);
 void ChangeMode(spdio_t *io, int ms, int bootmode, int at);
-
 spdio_t *spdio_init(int flags);
 void spdio_free(spdio_t *io);
-
 void encode_msg(spdio_t *io, int type, const void *data, size_t len);
 void encode_msg_nocpy(spdio_t *io, int type, size_t len);
 int send_msg(spdio_t *io);
