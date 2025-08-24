@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
         
         auth_action = QAction(QIcon("resources/icons/auth.png"), "Authenticate", self)
-        auth_action.triggered.connect(self.show_auth_dialog)
+        auth_action.triggered.connect(self.authenticate_device)  # Исправлено здесь
         toolbar.addAction(auth_action)
         
     def create_device_tab(self):
