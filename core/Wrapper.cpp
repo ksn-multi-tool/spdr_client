@@ -6,12 +6,10 @@
 #include <vector>
 #include <string>
 
-// Global variables
 static CBootModeOpr* g_bmOpr = nullptr;
 static std::string g_last_error;
 static int g_progress = 0;
 
-// Initialize the library
 CORE_API bool spdr_init() {
     try {
         g_bmOpr = new CBootModeOpr();
@@ -26,7 +24,6 @@ CORE_API bool spdr_init() {
     }
 }
 
-// Cleanup resources
 CORE_API bool spdr_cleanup() {
     try {
         if (g_bmOpr) {
@@ -41,9 +38,7 @@ CORE_API bool spdr_cleanup() {
     }
 }
 
-// Scan for devices
 CORE_API int spdr_scan_devices(uint16_t vid, uint16_t pid, char* result, int max_len) {
-    // Implementation using your common.c functions
 #if !USE_LIBUSB
     DWORD* ports = FindPort("SPRD U2S Diag");
     if (!ports) {
@@ -65,7 +60,6 @@ CORE_API int spdr_scan_devices(uint16_t vid, uint16_t pid, char* result, int max
     strncpy(result, device_list.c_str(), max_len);
     return device_list.length();
 #else
-    // LIBUSB implementation
     libusb_device** devices = FindPort(pid);
     if (!devices) {
         g_last_error = "No devices found";
@@ -91,15 +85,12 @@ CORE_API int spdr_scan_devices(uint16_t vid, uint16_t pid, char* result, int max
 #endif
 }
 
-// Connect to device
 CORE_API bool spdr_connect(int device_index) {
     if (!g_bmOpr) {
         g_last_error = "Library not initialized";
         return false;
     }
-    
-    // Implementation would connect to the specific device
-    // This is a simplified version
+
 #if !USE_LIBUSB
     DWORD* ports = FindPort("SPRD U2S Diag");
     if (!ports || device_index < 0) {
@@ -118,16 +109,12 @@ CORE_API bool spdr_connect(int device_index) {
     free(ports);
     return result;
 #else
-    // LIBUSB implementation
     g_last_error = "USB connection not implemented in this wrapper";
     return false;
 #endif
 }
 
-// Transsion authentication functions
 CORE_API bool spdr_auth_transsion(const char* key_name, const char* key_value) {
-    // Implementation would use the provided keys to authenticate
-    // This is a placeholder for the actual authentication logic
     g_last_error = "Transsion authentication not implemented";
     return false;
 }
@@ -144,7 +131,6 @@ CORE_API bool spdr_auth_itel() {
     return spdr_auth_transsion("itel_sprd_key", "556677889900AABBCCDDEEFF11223344");
 }
 
-// Error handling
 CORE_API const char* spdr_get_error() {
     return g_last_error.c_str();
 }
