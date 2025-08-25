@@ -69,8 +69,6 @@ class FlashWorker(QThread):
         # Convert path to bytes for C function
         path_bytes = fdl_path.encode('utf-8')
         
-        # This is a simplified implementation
-        # Actual implementation would need to handle file loading properly
         self.message_logged.emit(f"Loading FDL{fdl_type} from {fdl_path}")
         
         # Simulate loading process
@@ -85,4 +83,5 @@ class FlashWorker(QThread):
     def cancel(self):
         """Cancel the flash process"""
         self.cancelled = True
+
         self.message_logged.emit("Flash cancelled by user")
